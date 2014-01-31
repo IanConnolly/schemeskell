@@ -27,6 +27,14 @@ showVal (DottedList h t) = "(" ++ unwordsList h ++ "." ++ showVal t ++ ")"
 unwordsList :: [LispVal] -> String
 unwordsList = unwords . map showVal
 
+
+eval :: LispVal -> LispVal
+eval val@(String _) = val
+eval val@(Number _) = val
+eval val@(Bool _) = val
+eval (List [Atom "quote", val]) = val
+
+
 symbol :: Parser Char
 symbol = oneOf "!$%&|*+-/:<=>?@^_~"
 
@@ -80,14 +88,15 @@ parseExpr = parseAtom
                char ')'
                return x
 
-readExpr :: String -> String
+readExpr :: String -> LispVal
 readExpr input = case parse parseExpr "lisp" input of
-    Left err -> "No match: " ++ show err
-    Right val -> "Found: " ++ show val
+    Left err -> String $ "No match: " ++ show err
+    Right val -> val
 
 
 
 main :: IO ()
-main = do args <- getArgs
-          putStrLn (readExpr $ args !! 0)
-
+main = do
+    args <- getArgs
+    let arg = args !! 0
+    (putStrLn . show . eval . readExpr) $ arg
