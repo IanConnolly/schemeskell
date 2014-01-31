@@ -12,6 +12,15 @@ data LispVal = Atom String
              | Bool Bool
 
 
+
+showVal :: LispVal -> String
+showVal (Atom name) = name
+showVal (Number n) = show n
+showVal (String contents) = "\"" ++ contents ++ "\""
+showVal (Bool True) = "#t"
+showVal (Bool False) = "#f"
+
+
 symbol :: Parser Char
 symbol = oneOf "!$%&|*+-/:<=>?@^_~"
 
@@ -34,7 +43,7 @@ parseAtom = do first <- letter <|> symbol
                return $ case atom of
                           "#t" -> Bool True
                           "#f" -> Bool False
-                          otherwise -> Atom atom
+                          _    -> Atom atom
 
 parseNumber :: Parser LispVal
 parseNumber = liftM (Number . read) $ many1 digit
@@ -44,9 +53,9 @@ parseList = liftM List $ sepBy parseExpr spaces
 
 parseDottedList :: Parser LispVal
 parseDottedList = do
-    head <- endBy parseExpr spaces
-    tail <- char '.' >> spaces >> parseExpr
-    return $ DottedList head tail
+    h <- endBy parseExpr spaces
+    t <- char '.' >> spaces >> parseExpr
+    return $ DottedList h t
 
 parseQuoted :: Parser LispVal
 parseQuoted = do
