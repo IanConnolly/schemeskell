@@ -19,7 +19,12 @@ showVal (Number n) = show n
 showVal (String contents) = "\"" ++ contents ++ "\""
 showVal (Bool True) = "#t"
 showVal (Bool False) = "#f"
+showVal (List contents) = "(" ++ unwordsList contents ++ ")"
+showVal (DottedList h t) = "(" ++ unwordsList h ++ "." ++ showVal t ++ ")"
 
+
+unwordsList :: [LispVal] -> String
+unwordsList = unwords . map showVal
 
 symbol :: Parser Char
 symbol = oneOf "!$%&|*+-/:<=>?@^_~"
