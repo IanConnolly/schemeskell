@@ -79,8 +79,8 @@ primitives = [("+", numericBinop (+)),
               ("/=", numBoolBinop (/=)),
               (">=", numBoolBinop (>=)),
               ("<=", numBoolBinop (<=)),
-              ("&&", numBoolBinop (&&)),
-              ("||", numBoolBinop (||)),
+              ("&&", boolBoolBinop (&&)),
+              ("||", boolBoolBinop (||)),
               ("string=", strBoolBinop (==)),
               ("string?", strBoolBinop (>)),
               ("string<=?", strBoolBinop (<=)),
@@ -91,6 +91,18 @@ numericBinop _ singleVal@[_] = throwError $ NumArgs 2 singleVal
 numericBinop op params = do x <- mapM unpackNum params
                             (return . Number . foldl1 op) $ x
 
+boolBinop :: (LispVal -> ThrowsError a) -> (a -> a -> Bool) -> [LispVal] -> ThrowsError LispVal
+boolBinop unpacker op args = if length args /= 2
+                               then throwError $ NumArgs 2 args
+                               else do left <- unpacker $ args !! 0
+                                       right <- unpacker $ args !! 1
+                                       return $ Bool $ left `op` right
+
+numBoolBinop = boolBinop unpackNum
+boolBoolBinop = boolBinop unpackBool
+strBoolBinop = boolBinop unpackStr
+
+
 unpackNum :: LispVal -> ThrowsError Integer
 unpackNum (Number n) = return n
 unpackNum (String n) = let parsed = reads n in
@@ -99,6 +111,16 @@ unpackNum (String n) = let parsed = reads n in
                             else return $ fst $ parsed !! 0
 unpackNum (List [n]) = unpackNum n
 unpackNum notNum = throwError $ TypeMismatch "number" notNum
+
+unpackBool :: LispVal -> ThrowsError Bool
+unpackBool (Bool b) = return b
+unpackBool notBoolean = throwError $ TypeMismatch "boolean" notBoolean
+
+unpackStr :: LispVal -> ThrowsError String
+unpackStr (String s) = return s
+unpackStr (Number n) = return $ show n
+unpackStr (Bool b) = return $ show b
+unpackStr notString = throwError $ TypeMismatch "string" notString
 
 
 eval :: LispVal -> ThrowsError LispVal
