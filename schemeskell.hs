@@ -123,6 +123,13 @@ unpackStr (Bool b) = return $ show b
 unpackStr notString = throwError $ TypeMismatch "string" notString
 
 
+car :: [LispVal] -> ThrowsError LispVal
+car [List (x:xs)] = return x
+car [DottedList (x:xs) _] = return x
+car [badArg] = throwError $ TypeMismatch "pair" badArg
+car badArgList = throwError $ NumArgs 1 badArgList
+
+
 eval :: LispVal -> ThrowsError LispVal
 eval val@(String _) = return val
 eval val@(Number _) = return val
@@ -130,6 +137,11 @@ eval val@(Bool _) = return val
 eval (List [Atom "quote", val]) = return val
 eval (List (Atom func : args)) = do x <- mapM eval args
                                     apply func x
+eval (List [Atom "if", predic, conseq, alt]) =
+    do result <- eval predic
+       case result of
+         Bool False -> eval alt
+         _ -> eval conseq
 eval otherwiseBadForm = throwError $ BadSpecialForm
                       "Unrecognised special form" otherwiseBadForm
 
