@@ -86,7 +86,8 @@ primitives = [("+", numericBinop (+)),
               ("string<=?", strBoolBinop (<=)),
               ("string>=?", strBoolBinop (>=)),
               ("car", car),
-              ("cdr", cdr)]
+              ("cdr", cdr),
+              ("cons", cons)]
 
 numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> ThrowsError LispVal
 numericBinop _ singleVal@[_] = throwError $ NumArgs 2 singleVal
@@ -134,23 +135,30 @@ car badArgList = throwError $ NumArgs 1 badArgList
 cdr :: [LispVal] -> ThrowsError LispVal
 cdr [List (_:xs)] = return $ List xs
 cdr [DottedList (_:xs) x] = return $ DottedList xs x
-cdr [DottedList [_] x] = return x
+cdr [DottedList [xs] x] = return x
 cdr [badArg] = throwError $ TypeMismatch "pair" badArg
 cdr badArgList = throwError $ NumArgs 1 badArgList
+
+cons :: [LispVal] -> ThrowsError LispVal
+cons [x, List []] = return $ List [x]
+cons [x, List xs] = return $ List (x:xs)
+cons [x, DottedList xs y] = return $ DottedList (x:xs) y
+cons [x1, x2] = return $ DottedList [x1] x2
+cons badArgList = throwError $ NumArgs 2 badArgList
 
 
 eval :: LispVal -> ThrowsError LispVal
 eval val@(String _) = return val
 eval val@(Number _) = return val
 eval val@(Bool _) = return val
-eval (List [Atom "quote", val]) = return val
-eval (List (Atom func : args)) = do x <- mapM eval args
-                                    apply func x
 eval (List [Atom "if", predic, conseq, alt]) =
     do result <- eval predic
        case result of
          Bool False -> eval alt
          _ -> eval conseq
+eval (List [Atom "quote", val]) = return val
+eval (List (Atom func : args)) = do x <- mapM eval args
+                                    apply func x
 eval otherwiseBadForm = throwError $ BadSpecialForm
                       "Unrecognised special form" otherwiseBadForm
 
