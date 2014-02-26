@@ -84,7 +84,8 @@ primitives = [("+", numericBinop (+)),
               ("string=", strBoolBinop (==)),
               ("string?", strBoolBinop (>)),
               ("string<=?", strBoolBinop (<=)),
-              ("string>=?", strBoolBinop (>=))]
+              ("string>=?", strBoolBinop (>=)),
+              ("car", car)]
 
 numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> ThrowsError LispVal
 numericBinop _ singleVal@[_] = throwError $ NumArgs 2 singleVal
