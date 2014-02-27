@@ -87,7 +87,9 @@ primitives = [("+", numericBinop (+)),
               ("string>=?", strBoolBinop (>=)),
               ("car", car),
               ("cdr", cdr),
-              ("cons", cons)]
+              ("cons", cons),
+              ("eq", eqv),
+              ("eqv", eqv)]
 
 numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> ThrowsError LispVal
 numericBinop _ singleVal@[_] = throwError $ NumArgs 2 singleVal
@@ -146,6 +148,12 @@ cons [x, DottedList xs y] = return $ DottedList (x:xs) y
 cons [x1, x2] = return $ DottedList [x1] x2
 cons badArgList = throwError $ NumArgs 2 badArgList
 
+eqv :: [LispVal] -> ThrowsError LispVal
+eqv [(Bool a), (Bool b)] = return $ Bool $ a == b
+eqv [(Number a), (Number b)] = return $ Bool $ a == b
+eqv [(String a), (String b)] = return $ Bool $ a == b
+eqv [(Atom a), (Atom b)] = return $ Bool $ a == b
+eqv [(DottedList xs x), (DottedList ys y)] = eqv [List $ xs ++ [x], List $ ys ++ [y]]
 
 eval :: LispVal -> ThrowsError LispVal
 eval val@(String _) = return val
