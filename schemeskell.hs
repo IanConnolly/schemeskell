@@ -94,12 +94,12 @@ primitives = [("+", numericBinop (+)),
 numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> ThrowsError LispVal
 numericBinop _ singleVal@[_] = throwError $ NumArgs 2 singleVal
 numericBinop op params = do x <- mapM unpackNum params
-                            (return . Number . foldl1 op) $ x
+                            (return . Number . foldl1 op) x
 
 boolBinop :: (LispVal -> ThrowsError a) -> (a -> a -> Bool) -> [LispVal] -> ThrowsError LispVal
 boolBinop unpacker op args = if length args /= 2
                                then throwError $ NumArgs 2 args
-                               else do left <- unpacker $ args !! 0
+                               else do left <- unpacker $ head args
                                        right <- unpacker $ args !! 1
                                        return $ Bool $ left `op` right
 
@@ -113,7 +113,7 @@ unpackNum (Number n) = return n
 unpackNum (String n) = let parsed = reads n in
                           if null parsed
                             then throwError $ TypeMismatch "number" $ String n
-                            else return $ fst $ parsed !! 0
+                            else return $ fst $ head parsed
 unpackNum (List [n]) = unpackNum n
 unpackNum notNum = throwError $ TypeMismatch "number" notNum
 
@@ -149,11 +149,11 @@ cons [x1, x2] = return $ DottedList [x1] x2
 cons badArgList = throwError $ NumArgs 2 badArgList
 
 eqv :: [LispVal] -> ThrowsError LispVal
-eqv [(Bool a), (Bool b)] = return $ Bool $ a == b
-eqv [(Number a), (Number b)] = return $ Bool $ a == b
-eqv [(String a), (String b)] = return $ Bool $ a == b
-eqv [(Atom a), (Atom b)] = return $ Bool $ a == b
-eqv [(DottedList xs x), (DottedList ys y)] = eqv [List $ xs ++ [x], List $ ys ++ [y]]
+eqv [Bool a, Bool b] = return $ Bool $ a == b
+eqv [Number a, Number b] = return $ Bool $ a == b
+eqv [String a, String b] = return $ Bool $ a == b
+eqv [Atom a, Atom b] = return $ Bool $ a == b
+eqv [DottedList xs x, DottedList ys y] = eqv [List $ xs ++ [x], List $ ys ++ [y]]
 
 eval :: LispVal -> ThrowsError LispVal
 eval val@(String _) = return val
@@ -225,7 +225,7 @@ parseExpr = parseAtom
         <|> parseNumber
         <|> parseQuoted
         <|> do char '('
-               x <- (try parseList) <|> parseDottedList
+               x <- try parseList <|> parseDottedList
                char ')'
                return x
 
@@ -239,6 +239,6 @@ readExpr input = case parse parseExpr "lisp" input of
 main :: IO ()
 main = do
     args <- getArgs
-    let arg = args !! 0
-    evaled <- return $ liftM show $ readExpr arg >>= eval
+    let arg = head args
+    let evaled = liftM show $ readExpr arg >>= eval
     putStrLn $ extractValue $ trapError evaled
