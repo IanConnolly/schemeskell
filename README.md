@@ -2,7 +2,9 @@ schemeskell
 ===========
 
 A toy, mostly broken implementation of Scheme in Haskell. It only implements
-a subset of the [R5RS standard](http://www.schemers.org/Documents/Standards/R5RS/HTML/).
+an undocumented subset of the
+[R5RS standard](http://www.schemers.org/Documents/Standards/R5RS/HTML/). Still
+a WIP.
 
 
 ## Installation
@@ -10,6 +12,9 @@ a subset of the [R5RS standard](http://www.schemers.org/Documents/Standards/R5RS
 * Clone the repo
 * ``` cd schemeskell ```
 * ``` cabal install ```
+
+Make sure that the location that Cabal installs packages to is in your
+``` $PATH ```. eg. ```~/Library/Haskell/bin``` on OSX.
 
 ## Running
 
