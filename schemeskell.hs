@@ -230,7 +230,7 @@ parseExpr = parseAtom
                return x
 
 readExpr :: String -> ThrowsError LispVal
-readExpr input = case parse parseExpr "lisp" input of
+readExpr input = case parse parseExpr "schemeskell" input of
     Left err -> throwError $ Parser err
     Right val -> return val
 
